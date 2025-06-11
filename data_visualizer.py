@@ -18,48 +18,50 @@ def visualize_dict_pie(data_dict, title):
     keys = list(data_dict.keys())
     values = list(data_dict.values())
 
-    plt.figure(figsize=(6, 6))
+
+    plt.figure(figsize=(8, 8))
     plt.pie(values, labels=keys, autopct='%1.1f%%', startangle=90)
     plt.title(title)
     plt.axis('equal')
     plt.tight_layout()
     plt.show()
 
-def visualize_monthly_hours(initial_df, by_name_or_role= 'name', year = 2024):
+def visualize_monthly_hours(initial_df, by_name_or_role= 'name'):
     df = initial_df[initial_df['WEEK'] == 'Total']
     df = df.set_index('MONTH')
     df = df.drop(columns=['YEAR', 'WEEK', 'Total'])
 
     if by_name_or_role == 'name':
         df.columns = [col[0] for col in df.columns]
-        title = f"Monthly Hours by Person in {year}"
+        title = f"Monthly Hours by Person"
     if by_name_or_role == 'role':
         df.columns = [col[1] for col in df.columns]
         df = df.T.groupby(level=0).sum().T
-        title = f"Monthly Hours by Role in {year}"
+        title = f"Monthly Hours by Role"
 
     df.plot(kind='bar', figsize=(10, 5), stacked=True)
     plt.title(title)
     plt.ylabel("Hours")
     plt.xticks(rotation=45)
+    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
     plt.tight_layout()
     plt.show()
 
 
 
-def visualize_weekly_total_hours(df, year):
+def visualize_weekly_total_hours(df):
     df = df.copy()
     df['WEEK_ID'] = range(1, len(df) + 1)
     plt.figure(figsize=(10, 5))
     plt.plot(df['WEEK_ID'], df['Total'], marker='o')
     plt.xlabel('Week #')
     plt.ylabel('Total Hours Worked')
-    plt.title(f'Weekly Total Hours Trend in {year}')
+    plt.title(f'Weekly Total Hours Trend')
     plt.grid(True)
     plt.tight_layout()
     plt.show()
 
-def visualize_weekly_hours_by_person(df, year):
+def visualize_weekly_hours_by_person(df):
 
     df = df.copy()
     df['WEEK_ID'] = range(1, len(df) + 1)
@@ -74,15 +76,15 @@ def visualize_weekly_hours_by_person(df, year):
     plot_data = df.set_index('WEEK_ID')[people_columns]
     plot_data = plot_data.apply(pd.to_numeric, errors='coerce')
 
-    plot_data.plot(kind='bar', stacked=True, figsize=(12, 6))
-    plt.title(f'Weekly Workload by Person in {year}')
+    plot_data.plot(kind='bar', stacked=True, figsize=(20, 6))
+    plt.title(f'Weekly Workload by Person')
     plt.xlabel('Week #')
     plt.ylabel('Hours Worked')
     plt.legend(title='Person')
     plt.tight_layout()
     plt.show()
 
-def visualize_weekly_hours_by_role(df, year):
+def visualize_weekly_hours_by_role(df):
 
     df = df.copy()
     df['WEEK_ID'] = range(1, len(df) + 1)
@@ -105,8 +107,8 @@ def visualize_weekly_hours_by_role(df, year):
     role_df['WEEK_ID'] = df['WEEK_ID']
     role_df = role_df.set_index('WEEK_ID')
 
-    role_df.plot(kind='bar', stacked=True, figsize=(12, 6))
-    plt.title(f'Weekly Workload by Role in {year}')
+    role_df.plot(kind='bar', stacked=True, figsize=(20, 6))
+    plt.title(f'Weekly Workload by Role')
     plt.xlabel('Week #')
     plt.ylabel('Hours Worked')
     plt.legend(title='Role')
