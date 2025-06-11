@@ -1,33 +1,36 @@
 import pandas as pd
-from df_transformer import clean_dataset
+import matplotlib.pyplot as plt
+from df_transformer import clean_dataset, clean_week_column
+from data_visualizer import visualize_monthly_hours
 
 pd.set_option('display.max_columns', None)
 pd.set_option('display.width', None)
 
-df = pd.read_csv('Transformed Data v2.csv', sep=';', decimal=",")
+df = pd.read_csv('Data/Transformed Data 2022.csv', sep=';', decimal=",")
 
 df = clean_dataset(df)
 
-index = 0
-while index < len(df) - 1:
-    week = str(df.at[index, 'WEEK'])
-    if(index == 21):
-        print('')
-    next_week = str(df.at[index + 1, 'WEEK'])
-    
-    if '-' in week:
-        start_day, end_day = map(int, week.split("-"))
-    else:
-        index += 1
-        continue
-    
-    while 'Total' in next_week and index + 2 < len(df):
-        index += 1
-        next_week = str(df.at[index + 1, 'WEEK'])
+by_name_or_role = 'role'
+initial_df = df
+year = 2022
 
-    if '-' in next_week:
-        next_start_day, _ = map(int, next_week.split("-"))
-    
-        if not ((end_day in [28, 29, 30, 31] and next_start_day == 1) or end_day == next_start_day - 1):
-            print('Check Row: ', index +1)
-    index += 1
+df = initial_df[initial_df['WEEK'] == 'Total']
+df = df.set_index('MONTH')
+df = df.drop(columns=['YEAR', 'WEEK', 'Total'])
+
+if by_name_or_role == 'name':
+    df.columns = [col[0] for col in df.columns]
+    title = "Monthly Hours by Person in " , year
+if by_name_or_role == 'role':
+    df.columns = [col[1] for col in df.columns]
+    df = df.T.groupby(level=0).sum().T
+    title = "Monthly Hours by Role in ", year
+
+df.plot(kind='bar', figsize=(10, 5), stacked=True)
+plt.title(title)
+plt.ylabel("Hours")
+plt.xticks(rotation=45)
+plt.tight_layout()
+plt.show()
+
+df.head()

@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import pandas as pd
+from collections import defaultdict
 
 def visualize_dict_horiz_bar(dict, title):
     keys = list(dict.keys())
@@ -24,18 +25,18 @@ def visualize_dict_pie(data_dict, title):
     plt.tight_layout()
     plt.show()
 
-def visualize_monthly_hours(initial_df, by_name_or_role= 'name'):
+def visualize_monthly_hours(initial_df, by_name_or_role= 'name', year = 2024):
     df = initial_df[initial_df['WEEK'] == 'Total']
     df = df.set_index('MONTH')
     df = df.drop(columns=['YEAR', 'WEEK', 'Total'])
 
     if by_name_or_role == 'name':
         df.columns = [col[0] for col in df.columns]
-        title = "Monthly Hours by Person in 2024"
+        title = f"Monthly Hours by Person in {year}"
     if by_name_or_role == 'role':
         df.columns = [col[1] for col in df.columns]
         df = df.T.groupby(level=0).sum().T
-        title = "Monthly Hours by Role in 2024"
+        title = f"Monthly Hours by Role in {year}"
 
     df.plot(kind='bar', figsize=(10, 5), stacked=True)
     plt.title(title)
@@ -46,48 +47,42 @@ def visualize_monthly_hours(initial_df, by_name_or_role= 'name'):
 
 
 
-def visualize_weekly_total_hours(df):
+def visualize_weekly_total_hours(df, year):
     df = df.copy()
     df['WEEK_ID'] = range(1, len(df) + 1)
     plt.figure(figsize=(10, 5))
     plt.plot(df['WEEK_ID'], df['Total'], marker='o')
     plt.xlabel('Week #')
     plt.ylabel('Total Hours Worked')
-    plt.title('Weekly Total Hours Trend')
+    plt.title(f'Weekly Total Hours Trend in {year}')
     plt.grid(True)
     plt.tight_layout()
     plt.show()
 
-def visualize_weekly_hours_by_person(df):
+def visualize_weekly_hours_by_person(df, year):
 
     df = df.copy()
     df['WEEK_ID'] = range(1, len(df) + 1)
 
     other_cols = ['YEAR', 'MONTH', 'WEEK LENGTH', 'Total','WEEK_ID']
+    df.columns = [
+        col[0] if isinstance(col, tuple) and col not in other_cols else col
+        for col in df.columns
+    ]
     people_columns = [col for col in df.columns if col not in other_cols]
 
-    numeric_df = df[people_columns].apply(pd.to_numeric, errors='coerce')
-    valid_people_columns = numeric_df.columns[numeric_df.notna().any()].tolist()
-
-    if not valid_people_columns:
-        print("No numeric person columns to plot.")
-        return
-
-    plot_data = df.set_index('WEEK_ID')[valid_people_columns]
+    plot_data = df.set_index('WEEK_ID')[people_columns]
     plot_data = plot_data.apply(pd.to_numeric, errors='coerce')
 
     plot_data.plot(kind='bar', stacked=True, figsize=(12, 6))
-    plt.title('Weekly Workload by Person')
+    plt.title(f'Weekly Workload by Person in {year}')
     plt.xlabel('Week #')
     plt.ylabel('Hours Worked')
     plt.legend(title='Person')
     plt.tight_layout()
     plt.show()
 
-def visualize_weekly_hours_by_role(df):
-    import matplotlib.pyplot as plt
-    import pandas as pd
-    from collections import defaultdict
+def visualize_weekly_hours_by_role(df, year):
 
     df = df.copy()
     df['WEEK_ID'] = range(1, len(df) + 1)
@@ -103,7 +98,7 @@ def visualize_weekly_hours_by_role(df):
             role_sums[role] += pd.to_numeric(df[col], errors='coerce').fillna(0)
 
     if not role_sums:
-        print("❌ No numeric role columns to plot.")
+        print("No numeric role columns to plot.")
         return
 
     role_df = pd.DataFrame(role_sums)
@@ -111,7 +106,7 @@ def visualize_weekly_hours_by_role(df):
     role_df = role_df.set_index('WEEK_ID')
 
     role_df.plot(kind='bar', stacked=True, figsize=(12, 6))
-    plt.title('Weekly Workload by Role')
+    plt.title(f'Weekly Workload by Role in {year}')
     plt.xlabel('Week #')
     plt.ylabel('Hours Worked')
     plt.legend(title='Role')

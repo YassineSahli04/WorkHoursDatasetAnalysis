@@ -1,9 +1,12 @@
 import pandas as pd 
+import re
 
 def clean_dataset(df):
     replace_hours_NaN_by_0(df)
     transform_header_to_tuple(df)
-    return remove_rows_with_ND_vals_week_col(df)
+    df = remove_rows_with_ND_vals_week_col(df)
+    clean_week_column(df)
+    return df
 
 def remove_rows_with_ND_vals_week_col(df):
     return df[df['WEEK'].apply(lambda x: '-' in str(x) or x == 'Total')].reset_index(drop=True) 
@@ -26,6 +29,36 @@ def transform_header_to_tuple(df):
             new_columns[col] = (name.strip(), role.strip())
 
     df.rename(columns=new_columns, inplace=True)
+
+def clean_week_column(df):
+    for index, row in df.iterrows():
+        val = row['WEEK']
+
+        if isinstance(val, str) and 'Total' in val:
+            continue
+    
+        if val.isdigit():
+            val = int(val)
+            df.at[index, 'WEEK'] = f"{val}-{val}"
+               
+        elems = re.findall(r'\w+|[-]',val)
+        count_other = 0
+        int_list = []
+        for elem in elems:
+            try:
+                int_list.append(int(elem))
+            except:
+                count_other += 1
+ 
+        if '-' in elems and len(int_list) == 2:
+            if count_other == 1:
+                continue
+            else:
+                df.at[index, 'WEEK'] = f"{int_list[0]}-{int_list[1]}"
+
+
+
+
 
 def check_week_interval(df):
     index = 0
